@@ -36,14 +36,25 @@ def load_bbs_skymodel(infilename):
 
     # remove empty lines sed '/^$/d'
     # remove format line grep -v 'format'
+    # remove format line grep -v 'FORMAT' - prefactor output
+    # remove patch lines grep -v ' , , component' - prefactor output
     # remove comment lines  grep -v '#'
-    os.system("grep -v '00:00:00, +00.00.00' " + infilename+ " | grep -v '#' |  grep -v '00:00:00, +90.00.00' | grep -v 'format' | sed '/^$/d'>" + tmp_input) # to remove patches headers from skymodel
+    os.system("grep -v '00:00:00, +00.00.00' " + infilename+ " | grep -v ' , , component'  | grep -v '#' |  grep -v '00:00:00, +90.00.00' | grep -v 'format' | grep -v 'FORMAT' | sed '/^$/d'>" + tmp_input) # to remove patches headers from skymodel
 
-    types = numpy.dtype({'names':['Name', 'Type','Patch','Ra', 'Dec', 'I', 'Q', 'U', 'V', 'Maj', 'Min', 'PA', 'RefFreq', 'Spidx'],\
-           'formats':['S100','S100','S100','S100','S100',numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,'S100']})
+    try:
+        types = numpy.dtype({'names':['Name', 'Type','Patch','Ra', 'Dec', 'I', 'Q', 'U', 'V', 'Maj', 'Min', 'PA', 'RefFreq', 'Spidx'],\
+            'formats':['S100','S100','S100','S100','S100',numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,numpy.float,'S100']})
 
 
-    data  = numpy.loadtxt(tmp_input, comments='format', unpack=True, delimiter=', ', dtype=types)
+        data  = numpy.loadtxt(tmp_input, comments='format', unpack=True, delimiter=', ', dtype=types)
+        
+    ## handle the case we have prefactor output
+    except IndexError:
+        types = numpy.dtype({'names':['Name', 'Type','Patch','Ra', 'Dec', 'I', 'Q', 'U', 'V'],\
+            'formats':['S100','S100','S100','S100','S100',numpy.float,numpy.float,numpy.float,numpy.float]})
+
+
+        data  = numpy.loadtxt(tmp_input, comments='format', unpack=True, delimiter=', ', dtype=types)
     os.system('rm ' + tmp_input)
 
     return data
